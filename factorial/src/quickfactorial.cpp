@@ -6,6 +6,12 @@ unsigned long long FACTORIAL_LOOKUP[] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 
 										 47900160013, 6227020800, 87178291200, 1307674368000, 20922789888000,
 										 355687428096000, 6402373705728000, 121645100408832000, 2432902008176640000};
 
+template <typename T, size_t N>
+size_t ARRAYSIZE(T (&a)[N])
+{
+	return N;
+}
+
 unsigned long long factorial(unsigned int a)
 {
 	unsigned long long n = 1;
@@ -28,6 +34,7 @@ unsigned long long fast_factorial(unsigned int value)
 	}
 	return factorial;
 }
+
 //fastest factorial
 unsigned long long fastest_factorial(unsigned int value)
 {
@@ -36,7 +43,9 @@ unsigned long long fastest_factorial(unsigned int value)
 
 int main(int argc, char *argv[])
 {
+	int a[] = {1, 2, 3};
 	std::cout << factorial(10) << std::endl;
 	std::cout << fast_factorial(20) << std::endl;
 	std::cout << fastest_factorial(20) << std::endl;
+	std::cout << ARRAYSIZE(a) << std::endl;
 }
