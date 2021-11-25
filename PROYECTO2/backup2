@@ -1,0 +1,331 @@
+#ifndef PROB
+#define PROB
+
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <numeric>
+#include <algorithm>
+
+class ProbGrid
+{
+private:
+    bool torp = false;
+    bool dep;
+    int _prob[10] = {2, 3, 4, 5, 6, 6, 5, 4, 3, 2};
+    char hits[10][10];
+    std::vector<int> grid;
+
+    int floor_div(int val, int div, int floor = 1)
+    {
+        if (val == 0)
+            return 0;
+        if ((val / div) != 0)
+            return (val / div);
+        return floor;
+    }
+
+    void print(int range_x = 10, int range_y = 10)
+    {
+        std::cout << std::endl;
+        for (int i = 0; i < range_y; i++)
+        {
+            for (int j = 0; j < range_x; j++)
+                std::cout << std::fixed << std::setprecision(2) << grid.at(i * 10 + j) << '\t';
+            std::cout << std::endl;
+        }
+    }
+
+    void fill(int x_1, int x_2, int y_1, int y_2)
+    {
+        for (int i = x_1; i <= x_2; i++)
+            for (int j = y_1; j <= y_2; j++)
+                if (grid.at(i * 10 + j) != 0)
+                    grid.at(i * 10 + j) = 1;
+    }
+
+    int *dest_range(int x, int y)
+    {
+        static int dest[4];
+        dest[0] = x;
+        dest[1] = y;
+        dest[2] = x;
+        dest[3] = y;
+        while (dest[0] != 0 && grid.at((dest[0] - 1) * 10 + y) == 0)
+            dest[0] -= 1;
+        while (dest[2] != 9 && grid.at((dest[2] + 1) * 10 + y) == 0)
+            dest[2] += 1;
+        while (dest[1] != 0 && grid.at((x * 10 + dest[1] - 1)) == 0)
+            dest[1] -= 1;
+        while (dest[3] != 9 && grid.at((x * 10 + dest[3] + 1)) == 0)
+            dest[3] += 1;
+        if (dest[0] != 0)
+            dest[0] -= 1;
+        if (dest[2] != 9)
+            dest[2] += 1;
+        if (dest[3] != 0)
+            dest[3] -= 1;
+        if (dest[4] != 9)
+            dest[4] += 1;
+        return dest;
+    }
+
+    void grid_set()
+    {
+        for (int i = 0; i < 10; i++)
+            for (int j = 0; j < 10; j++)
+                grid.push_back(dep ? (_prob[i] * _prob[j]) : 1);
+    }
+
+    void surround()
+    {
+        for (int i = 0; i < 10; i++)
+            for (int j = 0; j < 10; j++)
+                if ((j != 9 && grid.at(i * 10 + j + 1)) || (j != 0 && grid.at(i * 10 + j - 1)) || (i != 9 && grid.at((i + 1) * 10 + j)) || (i != 0 && grid.at((i - 1) * 10 + j)))
+                    grid.at(i * 10 + j) = floor_div(grid.at(i * 10 + j), 10);
+    }
+
+    void reset(bool ignore = false)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < 10; j++)
+            {
+                if (grid.at(i * 10 + j) != 0 && (ignore || grid.at(i * 10 + j) < 50))
+                    grid.at(i * 10 + j) = (dep || torp) ? (_prob[i] * _prob[j]) : 1;
+                if (torp)
+                    std::cout << "KDKDKD" << std::endl;
+                dep = !dep;
+            }
+            dep = !dep;
+        }
+        print();
+    }
+
+    void intialize()
+    {
+        srand(time(nullptr));
+        dep = (rand() % 2);
+        grid_set();
+        reset(true);
+        print();
+    }
+
+    void set_zero(int x, int y)
+    {
+        grid.at(x * 10 + y) = 0;
+    }
+
+    void increse(int x, int y)
+    {
+        if (grid.at(x * 10 + y) <= 1 && 0 < grid.at(x * 10 + y))
+        {
+            grid.at(x * 10 + y) = _prob[x] * _prob[y];
+        }
+        grid.at(x * 10 + y) *= 50;
+    }
+
+    void decrease(int x, int y, int decrease = 10)
+    {
+        grid.at(x * 10 + y) = floor_div(grid.at(x * 10 + y), decrease);
+    }
+
+    void range_decrease(int x, int y)
+    {
+        for (int i = 0; i < 10; i++)
+            if (grid.at(i * 10 + y) != 0)
+                decrease(i, y);
+        for (int i = 0; i < 10; i++)
+            if (grid.at(i * 10 + y) != 0)
+                decrease(x, i);
+    }
+
+    void dia_increase(int x, int y)
+    {
+        if (x < 9 && y < 9)
+            decrease(x + 1, y + 1);
+        if (0 < x && y < 9)
+            decrease(x - 1, y + 1);
+        if (x < 9 && 0 < y)
+            decrease(x + 1, y - 1);
+        if (0 < x && 0 < y)
+            decrease(x - 1, y - 1);
+    }
+
+public:
+    ProbGrid()
+    {
+        intialize();
+    }
+    void hit(int x, int y)
+    {
+        set_zero(x, y);
+        if (x != 0)
+            increse(x - 1, y);
+        if (x != 9)
+            increse(x + 1, y);
+        if (y != 0)
+            increse(x, y - 1);
+        if (y != 9)
+            increse(x, y + 1);
+    }
+    void miss(int x, int y)
+    {
+        set_zero(x, y);
+        range_decrease(x, y);
+    }
+    void destroyed(int x, int y)
+    {
+        set_zero(x, y);
+        if (x != 0)
+            decrease(x - 1, y);
+        if (x != 9)
+            decrease(x + 1, y);
+        if (y != 0)
+            decrease(x, y - 1);
+        if (y != 9)
+            decrease(x, y + 1);
+        reset();
+
+        //surround();
+    }
+    int *smart_select()
+    {
+        std::cout << "SMARTMODE: " << torp << std::endl;
+        print();
+        auto const it = std::max_element(grid.begin(), grid.end());
+        int index = std::distance(grid.begin(), it);
+        static int dirt[2];
+        dirt[0] = index / 10;
+        dirt[1] = index % 10;
+        return dirt;
+    }
+
+    int *dumb_select()
+    {
+        std::cout << "DUMBMODE" << std::endl;
+        static int dirt[2];
+        int x;
+        int y;
+        do
+        {
+            x = rand() % 10;
+            y = rand() % 10;
+        } while (grid.at(x * 10 + y) == 0);
+        dirt[0] = x;
+        dirt[1] = y;
+        return dirt;
+    }
+
+    void torp_mode()
+    {
+        torp = true;
+    }
+
+    ~ProbGrid()
+    {
+    }
+};
+
+/*
+
+void print(int array[][10], int range_x = 10, int range_y = 10)
+{
+    std::cout << std::endl;
+    for (int i = 0; i < range_y; i++)
+    {
+        for (int j = 0; j < range_x; j++)
+
+            std::cout << std::setw(2) << std::setfill('0') << array[i][j] / 10 << '.' << array[i][j] % 10 << ' ';
+        std::cout << std::endl;
+    }
+}
+
+void decrease(int prob[10][10], int ratio)
+{
+    for (int i = 0; i < 10; i++)
+        for (int j = 0; j < 10; j++)
+            prob[i][j] = (prob[i][j] * ratio) / 1000;
+}
+
+void failed(int prob[10][10], char hits[10][10], int x, int y, int event)
+{
+    int skip;
+    //DECRESE PROB OF ROW AND COLUM
+}
+
+void damaged(int prob[10][10], int x, int y, int event)
+{
+    prob[y + 1][x] = prob[y + 1][x] == 1 ? 207 : (prob[y + 1][x] * 207) / 1000;
+    prob[y - 1][x] = prob[y - 1][x] == 1 ? 207 : (prob[y - 1][x] * 207) / 1000;
+    prob[y][x + 1] = prob[y][x + 1] == 1 ? 207 : (prob[y][x + 1] * 207) / 1000;
+    prob[y][x - 1] = prob[y][x + 1] == 1 ? 207 : (prob[y][x - 1] * 207) / 1000;
+}
+
+void destroyed(int prob[10][10], char hits[10][10], int x, int y, int event)
+{
+    int dep = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 10; j++)
+            if (prob[i][j] != 0)
+                prob[i][j] = dep ? (_prob[i] * _prob[j]) / 1000 : 1, dep = !dep;
+        dep = !dep;
+    }
+}
+
+//3 types of events 0 FAILED; 1 DAMAGED; 2 DESTROYED;
+
+void update(int prob[10][10], int x, int y, int event = 0, char hits[10][10] = {})
+{
+    prob[y][x] = 0;
+    switch (event)
+    {
+    case 0:
+        failed(prob, hits, x, y, event);
+        break;
+    case 1:
+        damaged(prob, x, y, event);
+        break;
+    case 3:
+        destroyed(prob, hits, x, y, event);
+        break;
+    default:
+        break;
+    }
+}
+
+void test(int prob)
+{
+    int x;
+    int c;
+    srand(time(nullptr));
+    do
+    {
+        x = (rand()) % 1000 + 1;
+        c++;
+    } while (x > prob);
+    std::cout << c << std::endl;
+}
+
+void probability_chart(int array[10][10])
+{
+    int dep = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 10; j++)
+            array[i][j] = dep ? (_prob[i] * _prob[j]) / 1000 : 1, dep = !dep;
+        dep = !dep;
+    }
+    print(array);
+    update(array, 5, 5, 1);
+    print(array);
+    update(array, 6, 5, 1);
+    print(array);
+    update(array, 7, 7, 2);
+    print(array);
+}
+*/
+#endif
