@@ -9,14 +9,19 @@
 #include <numeric>
 #include <algorithm>
 
+// El core del programa mismo. Usando probabilidades y inputs del deepred_blue,
+// puede calcular la mejor posicion, actualizando y recalculando con cada input.
+// Hay partes deo
+
 class ProbGrid
 {
 private:
-    bool dep, only_torp = false;
-    float _prob[10] = {2.82, 4.07, 5.07, 5.63, 5.92, 5.92, 5.63, 5.07, 4.07, 2.82};
+    bool dep, _out, only_torp = false;
     char hits[10][10];
-    float grid[10][10];
     float max;
+    float grid[10][10];
+    const float _prob[10] = {2.82, 4.07, 5.07, 5.63, 5.92, 5.92, 5.63, 5.07, 4.07, 2.82};
+
     std::vector<float> accumalated_prob;
 
     void print(int range_x = 10, int range_y = 10)
@@ -48,8 +53,11 @@ private:
                     grid[i][j] = _prob[i] * _prob[j];
                 grid[i][j] *= factor;
             }
-        std::cout << "Fill" << std::endl;
-        print();
+        if (_out)
+        {
+            std::cout << "Fill" << std::endl;
+            print();
+        }
     }
 
     int *dest_range(int x, int y)
@@ -59,13 +67,13 @@ private:
         dest[1] = y;
         dest[2] = x;
         dest[3] = y;
-        while (dest[0] != 0 && grid[dest[0] - 1][y] == 0)
+        while (dest[0] != 0 && grid[dest[0] - 1][y] == 0 && grid[dest[0] - 1][y] < 5)
             dest[0] -= 1;
-        while (dest[2] != 9 && grid[dest[2] + 1][y] == 0)
+        while (dest[2] != 9 && grid[dest[2] + 1][y] == 0 && grid[dest[2] + 1][y] < 5)
             dest[2] += 1;
-        while (dest[1] != 0 && grid[x][dest[1] - 1] == 0)
+        while (dest[1] != 0 && grid[x][dest[1] - 1] == 0 && grid[x][dest[1] - 1] < 5)
             dest[1] -= 1;
-        while (dest[3] != 9 && grid[x][dest[3] + 1] == 0)
+        while (dest[3] != 9 && grid[x][dest[3] + 1] == 0 && grid[x][dest[3] - 1] < 5)
             dest[3] += 1;
         if (dest[0] != 0)
             dest[0] -= 1;
@@ -151,16 +159,14 @@ private:
             increase(x, y - 1, grid[x][y]);
         if (y != 9)
             increase(x, y + 1, grid[x][y]);
-        /*
         if (x < 9 && y < 9)
-            decrease(x + 1, y + 1, 0.01);
+            decrease(x + 1, y + 1, 0.00001);
         if (0 < x && y < 9)
-            decrease(x - 1, y + 1, 0.01);
+            decrease(x - 1, y + 1, 0.00001);
         if (x < 9 && 0 < y)
-            decrease(x + 1, y - 1, 0.01);
+            decrease(x + 1, y - 1, 0.00001);
         if (0 < x && 0 < y)
-            decrease(x - 1, y - 1, 0.01);
-        */
+            decrease(x - 1, y - 1, 0.00001);
     }
 
     void _miss(int x, int y)
@@ -186,7 +192,7 @@ private:
     }
 
 public:
-    ProbGrid()
+    ProbGrid(bool out = false) : _out(false)
     {
         intialize();
     }
@@ -213,12 +219,17 @@ public:
     }
     int *smart_select()
     {
-        std::cout << "SMARTMODE" << std::endl;
-        print();
-        float r = (rand() % int(max * 100) + 1) / 100;
+        if (_out)
+        {
+            std::cout << "SMARTMODE" << std::endl;
+            print();
+            comulative_print();
+        }
+        static int dirt[2];
+        float r = (rand() % int(max * 100 + 1) + 1) / 100.0;
+        update_accumalted_prob();
         auto const it = std::lower_bound(accumalated_prob.begin(), accumalated_prob.end(), r);
         int index = std::distance(accumalated_prob.begin(), it);
-        static int dirt[2];
         dirt[0] = index / 10;
         dirt[1] = index % 10;
         return dirt;
@@ -226,10 +237,12 @@ public:
 
     int *dumb_select()
     {
-        std::cout << "DUMBMODE" << std::endl;
+        if (_out)
+        {
+            std::cout << "DUMBMODE" << std::endl;
+        }
+        int x, y;
         static int dirt[2];
-        int x;
-        int y;
         do
         {
             x = rand() % 10;

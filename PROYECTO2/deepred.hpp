@@ -124,22 +124,21 @@ public:
 class Deepred_blue : public Deep_red
 {
 private:
+    bool hit, destroyed;
     int _hit = 0, _miss = 0;
-    int dumbmode_act = 0;
+    int y, x, index = 0;
+    int left[4] = {1, 2, 3, 4};
+    const int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
+    //ABST
+    const char l[4] = {'T', 'S', 'B', 'A'};
+    char fleet[10][10];
+    char hits[10][10];
     std::string out;
     std::string in;
     std::string ex;
     std::string token;
-    const int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
-    //ABST
-    const char l[4] = {'T', 'S', 'B', 'A'};
-    int left[4] = {1, 2, 3, 4};
-    char fleet[10][10];
-    char hits[10][10];
-    ProbGrid *prob = new ProbGrid();
 
-    int y, x, index = 0;
-    bool hit, destroyed;
+    ProbGrid *prob = new ProbGrid();
 
     void _fill(int x_1, int x_2, int y_1, int y_2, char val)
     {
@@ -334,6 +333,7 @@ private:
         else
             select = prob->smart_select();
          */
+
         std::cout << "A: " << left[0] << " B: " << left[1] << " S: " << left[2] << " T: " << left[3] << std::endl;
         int x = select[0];
         int y = select[1];
@@ -374,8 +374,6 @@ private:
         bool v = 0;
         for (counter = 0; counter < 100; counter++)
         {
-            if (dumbmode_act == 0 && left[0] + left[1] + left[2] == 0)
-                dumbmode_act = counter;
             read(in, true, false);
             if (t_info.size() != 0 && get_info(t_info.at(1)) && (info[1] == "YOU WIN!" || info[1] == "YOU LOSE"))
             {
@@ -433,9 +431,7 @@ public:
         remove(out.c_str());
         remove(ex.c_str());
         if (ratio)
-            std::cout << "H/M " << _hit << ':' << _miss << " ratio: " << float(_hit) / float(_miss + _hit)
-                      << '\n'
-                      << "Dumbmode Activation % : " << dumbmode_act / float(_miss + _hit) * 100 << "%" << std::endl;
+            std::cout << "H/M " << _hit << ':' << _miss << " ratio: " << float(_hit) / float(_miss + _hit) << std::endl;
         return turns;
     }
 
