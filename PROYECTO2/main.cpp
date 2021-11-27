@@ -11,7 +11,9 @@ int main(int argc, char *argv[])
 		player = "FirstPlayer";
 	std::cout << '(' << argc << ')' << "Start: " << player << std::endl;
 	Deepred_blue *n = new Deepred_blue("DEEPRED", player + ".out", player + ".in", player + ".not");
-	std::cout << n->start(true) << " turns" << std::endl;
+	std::cout << n->start(true) << " shots" << std::endl;
+	delete n;
+	n = nullptr;
 	//.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship\\
 	//G:\\.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship
 	//G:\\.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship

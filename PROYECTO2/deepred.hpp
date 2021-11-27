@@ -4,10 +4,10 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <iomanip>
+//#include <iomanip>
 #include <string>
 #include <stdexcept>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <unistd.h>
 #include "prob.hpp"
 
@@ -116,9 +116,7 @@ protected:
 public:
     Deep_red(std::string _name) : name(_name) {}
     std::string get_name() { return name; }
-    ~Deep_red()
-    {
-    }
+    ~Deep_red() {}
 };
 
 class Deepred_blue : public Deep_red
@@ -128,7 +126,7 @@ private:
     int _hit = 0, _miss = 0;
     int y, x, index = 0;
     int left[4] = {1, 2, 3, 4};
-    const int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
+    int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
     //ABST
     const char l[4] = {'T', 'S', 'B', 'A'};
     char fleet[10][10];
@@ -438,6 +436,7 @@ public:
     ~Deepred_blue()
     {
         delete prob;
+        prob = nullptr;
     }
 };
 #endif

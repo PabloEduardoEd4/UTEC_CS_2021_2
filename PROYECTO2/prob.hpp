@@ -112,7 +112,8 @@ private:
         dep = (rand() % 2);
         reset(true);
         update_accumalted_prob();
-        print();
+        if (_out)
+            print();
     }
 
     void set_zero(int x, int y)
@@ -159,14 +160,16 @@ private:
             increase(x, y - 1, grid[x][y]);
         if (y != 9)
             increase(x, y + 1, grid[x][y]);
+        /*
         if (x < 9 && y < 9)
-            decrease(x + 1, y + 1, 0.00001);
+            decrease(x + 1, y + 1, 0.01);
         if (0 < x && y < 9)
-            decrease(x - 1, y + 1, 0.00001);
+            decrease(x - 1, y + 1, 0.01);
         if (x < 9 && 0 < y)
-            decrease(x + 1, y - 1, 0.00001);
+            decrease(x + 1, y - 1, 0.01);
         if (0 < x && 0 < y)
-            decrease(x - 1, y - 1, 0.00001);
+            decrease(x - 1, y - 1, 0.01);
+        */
     }
 
     void _miss(int x, int y)
