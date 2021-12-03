@@ -17,7 +17,6 @@ class ProbGrid
 {
 private:
     bool dep, _out, only_torp = false;
-    char hits[10][10];
     float max;
     float grid[10][10];
     const float _prob[10] = {2.82, 4.07, 5.07, 5.63, 5.92, 5.92, 5.63, 5.07, 4.07, 2.82};

@@ -4,23 +4,21 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-//#include <iomanip>
 #include <string>
 #include <stdexcept>
-//#include <stdlib.h>
 #include <unistd.h>
 #include "prob.hpp"
 
-//Hace todo relacionado a los files
+// Hace todo relacionado a los files
 class Deep_red
 {
 protected:
-    //in y out son relativos al program
+    // in y out son relativos al program
     std::string name;
     std::vector<std::string> t_info;
     std::string info[2];
 
-    //codigo de min official
+    // codigo de min official
     template <class T>
     const T &min(const T &a, const T &b)
     {
@@ -90,8 +88,11 @@ protected:
     }
 
     template <size_t A>
-    void print(char array[][A], int rows = 10)
+    void print(char array[][A], std::string extra = "No Name", int rows = 10)
     {
+
+        std::cout << std::endl;
+        std::cout << extra << std::endl;
         std::cout << "   ";
         for (int j = 0; j < rows; j++)
             std::cout << char(j + 'A') << ' ';
@@ -103,6 +104,7 @@ protected:
                 std::cout << array[i][j] << ' ';
             std::cout << std::endl;
         }
+        std::cout << std::endl;
     }
 
     void pause()
@@ -122,12 +124,11 @@ public:
 class Deepred_blue : public Deep_red
 {
 private:
-    bool hit, destroyed;
     int _hit = 0, _miss = 0;
     int y, x, index = 0;
     int left[4] = {1, 2, 3, 4};
     int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
-    //ABST
+    // ABST
     const char l[4] = {'T', 'S', 'B', 'A'};
     char fleet[10][10];
     char hits[10][10];
@@ -135,6 +136,7 @@ private:
     std::string in;
     std::string ex;
     std::string token;
+    std::vector<std::string> attacked_buffer;
 
     ProbGrid *prob = new ProbGrid();
 
@@ -151,36 +153,24 @@ private:
                 hits[i][j] = val;
     }
 
-    void dest(int x_1, int x_2, int y_1, int y_2)
-    {
-        bool temp = true;
-        for (int i = x_1; i <= x_2; i++)
-            for (int j = y_1; j <= y_2; j++)
-                temp = temp && (fleet[i][j] == 'Y');
-        destroyed = temp;
-    }
-
     void attack(int x, int y)
     {
         write(out, "TOKEN=" + token, true);
         write(out, "ATTACK=" + coor_to_string(x, y));
     }
 
-    void attacked(std::string val)
+    void attacked(std::string val, std::string state = "NULL")
     {
+        bool hit, destroyed;
         std::cout << "Attacked: " << val << std::endl;
-        hit = false;
+        hit = (state != "-FAILED");
+        destroyed = (state == "-DESTROYED");
         y = val[0] - 'A';
-        x = val[1] - '0' - 1;
-        for (int i = 0; i < 10; i++)
-        {
-            if (((ranges[i][0][0] <= x) && (ranges[i][1][0] >= x)) && (ranges[i][0][1] <= y && ranges[i][1][1] >= y))
-            {
-                hit = true;
-                index = int(i);
-                break;
-            }
-        }
+        if (val.size() == 3 && val[3] == '0')
+            x = 9;
+        else
+            x = val[1] - '0' - 1;
+        std::cout << x << ' ' << y << ' ' << hit << std::endl;
         if (hit)
         {
             std::cout << "HIT" << std::endl;
@@ -189,14 +179,17 @@ private:
         else
         {
             std::cout << "MISS" << std::endl;
-            fleet[x][y] = '.';
+            fleet[x][y] = 'L';
         }
-        dest(ranges[index][0][0], ranges[index][1][0], ranges[index][0][1], ranges[index][1][1]);
         if (destroyed)
         {
-            _fill(ranges[index][0][0], ranges[index][1][0], ranges[index][0][1], ranges[index][1][1], 'X');
+            int *t = dest_range(x, y);
+            std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
+            __fill(t[0], t[2], t[1], t[3], 'X');
         }
+        // print(fleet, "Your Board");
     }
+
     char ship_type(int x_1, int x_2, int y_1, int y_2)
     {
         int x = abs(x_1 - x_2);
@@ -247,7 +240,7 @@ private:
 
     void handshake()
     {
-        write(out, "HANDSHAKE=DEEPRED");
+        write(out, "HANDSHAKE=" + name);
         standby(in);
         get_info(t_info.at(0));
         if (info[1] != "ACCEPTED")
@@ -255,7 +248,7 @@ private:
         get_info(t_info[1]);
         token = info[1];
         std::cout << "Hand Shake Complete" << std::endl;
-        //std::cout << token;
+        // std::cout << token;
     }
 
     void standby(std::string filename, bool silent = false)
@@ -321,17 +314,7 @@ private:
 
         if (left[0] + left[1] + left[2] == 0)
             prob->only_torpedo();
-
         int *select = prob->smart_select();
-
-        /*
-        int *select;
-        if (left[0] + left[1] + left[2] == 0)
-            select = prob->dumb_select();
-        else
-            select = prob->smart_select();
-         */
-
         std::cout << "A: " << left[0] << " B: " << left[1] << " S: " << left[2] << " T: " << left[3] << std::endl;
         int x = select[0];
         int y = select[1];
@@ -357,19 +340,18 @@ private:
             hits[x][y] = 'Y';
             int *t = dest_range(x, y);
             remove_ship(ship_type(t[0], t[2], t[1], t[3]));
-            //std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
+            // std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
             __fill(t[0], t[2], t[1], t[3], 'X');
             prob->destroyed(x, y);
             _hit++;
         }
-        print(hits);
+        // print(hits, "Enemies Board");
         return (info[1] == "DESTROYED" || info[1] == "DAMAGED");
     }
 
     int run()
     {
         int counter = 0;
-        bool v = 0;
         for (counter = 0; counter < 100; counter++)
         {
             read(in, true, false);
@@ -380,15 +362,21 @@ private:
             }
             do
             {
-                standby(ex);
+                standby(ex, true);
+                if (get_info(t_info.at(1)) && info[0] == "ATTACK")
+                    attacked_buffer.push_back(info[1]);
                 if (info[1] == "YOU WIN!" || info[1] == "YOU LOSE")
-                {
                     return counter;
-                }
-
-                get_info(t_info.at(1));
             } while (!get_info(t_info.at(0)) || info[1] != token || !get_info(t_info.at(1)) || info[1] != "YOUR TURN");
             std::cout << "Shot  #" << counter << std::endl;
+            for (auto i : attacked_buffer)
+            {
+                std::cout << i << std::endl;
+                attacked(i.substr(0, i.find('-')), i.substr(i.find('-')));
+            }
+            attacked_buffer.clear();
+            print(fleet, "Your Board");
+            print(hits, "Enemy Board");
             combat();
             /*
             if (combat())
@@ -396,7 +384,7 @@ private:
             */
         }
         return counter;
-        //NOTIFICATION=YOU WIN!
+        // NOTIFICATION=YOU WIN!
     }
 
     void intialize()
@@ -423,11 +411,13 @@ public:
         handshake();
         send_coords();
         fill(10);
-        print(fleet);
+        print(fleet, "Your Board");
         int turns = run();
         remove(in.c_str());
         remove(out.c_str());
         remove(ex.c_str());
+        print(fleet, "Your Board");
+        print(hits, "Enemy Board");
         if (ratio)
             std::cout << "H/M " << _hit << ':' << _miss << " ratio: " << float(_hit) / float(_miss + _hit) << std::endl;
         return turns;
@@ -442,9 +432,9 @@ public:
 #endif
 
 /*
-Aircfratf Carrier (A) → 4 casillas contiguas 
-Battlecrucier (B) → 3 casillas contiguas 
-Submarine (S) →  2 casillas contiguas 
+Aircfratf Carrier (A) → 4 casillas contiguas
+Battlecrucier (B) → 3 casillas contiguas
+Submarine (S) →  2 casillas contiguas
 Torpedo boat (T) → 1 casilla
 1 Aircfratf Carrier 4
 2 Battlecruciers  6
