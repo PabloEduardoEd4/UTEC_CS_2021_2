@@ -3,11 +3,14 @@
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <string>
+#include <iomanip>
 #include <stdexcept>
 #include <unistd.h>
 #include "prob.hpp"
+#include "board.hpp"
 
 // Hace todo relacionado a los files
 class Deep_red
@@ -18,17 +21,6 @@ protected:
     std::vector<std::string> t_info;
     std::string info[2];
 
-    // codigo de min official
-    template <class T>
-    const T &min(const T &a, const T &b)
-    {
-        return !(b < a) ? a : b; // or: return !comp(b,a)?a:b; for version (2)
-    }
-    template <class T>
-    const T &max(const T &a, const T &b)
-    {
-        return (a < b) ? b : a; // or: return comp(a,b)?b:a; for version (2)
-    }
     bool write(std::string filename, std::string _s, bool overwrite = false, bool silent = false)
     {
         std::ofstream *output = new std::ofstream;
@@ -59,19 +51,21 @@ protected:
         t_info.clear();
         std::ifstream *input = new std::ifstream;
         input->open(filename);
-        if (!(input->is_open()))
+        if (input->is_open())
+            while (std::getline(*input, *line))
+            {
+                if (!silent)
+                    std::cout << *line << std::endl;
+                t_info.push_back(*line);
+            }
+        else
         {
             input->close();
             delete input;
             delete line;
             return false;
         }
-        while (std::getline(*input, *line))
-        {
-            if (!silent)
-                std::cout << *line << std::endl;
-            t_info.push_back(*line);
-        }
+
         input->close();
         if (del)
             remove(filename.c_str());
@@ -82,29 +76,8 @@ protected:
 
     bool get_info(std::string s, std::string div = "=")
     {
-        info[0] = s.substr(0, s.find(div));
-        info[1] = s.substr(s.find(div) + 1);
+        info[0] = s.substr(0, s.find(div)), info[1] = s.substr(s.find(div) + 1);
         return true;
-    }
-
-    template <size_t A>
-    void print(char array[][A], std::string extra = "No Name", int rows = 10)
-    {
-
-        std::cout << std::endl;
-        std::cout << extra << std::endl;
-        std::cout << "   ";
-        for (int j = 0; j < rows; j++)
-            std::cout << char(j + 'A') << ' ';
-        std::cout << std::endl;
-        for (int i = 0; i < rows; i++)
-        {
-            std::cout << std::setw(2) << std::setfill(' ') << (i + 1) << ' ';
-            for (int j = 0; j < A; j++)
-                std::cout << array[i][j] << ' ';
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
     }
 
     void pause()
@@ -118,7 +91,9 @@ protected:
 public:
     Deep_red(std::string _name) : name(_name) {}
     std::string get_name() { return name; }
-    ~Deep_red() {}
+    ~Deep_red()
+    {
+    }
 };
 
 class Deepred_blue : public Deep_red
@@ -130,71 +105,56 @@ private:
     int ranges[10][2][2] = {{{0, 0}, {0, 0}}, {{9, 9}, {9, 9}}, {{0, 9}, {0, 9}}, {{9, 0}, {9, 0}}, {{9, 2}, {9, 3}}, {{0, 3}, {0, 4}}, {{0, 6}, {0, 7}}, {{2, 9}, {4, 9}}, {{9, 5}, {9, 7}}, {{2, 0}, {5, 0}}};
     // ABST
     const char l[4] = {'T', 'S', 'B', 'A'};
-    char fleet[10][10];
-    char hits[10][10];
+    const std::string win = "NOTIFICATION=YOU WIN!";
+    const std::string lose = "NOTIFICATION=YOU LOSE";
     std::string out;
     std::string in;
     std::string ex;
+    std::string record;
     std::string token;
     std::vector<std::string> attacked_buffer;
 
     ProbGrid *prob = new ProbGrid();
-
-    void _fill(int x_1, int x_2, int y_1, int y_2, char val)
-    {
-        for (int i = x_1; i <= x_2; i++)
-            for (int j = y_1; j <= y_2; j++)
-                fleet[i][j] = val;
-    }
-    void __fill(int x_1, int x_2, int y_1, int y_2, char val)
-    {
-        for (int i = x_1; i <= x_2; i++)
-            for (int j = y_1; j <= y_2; j++)
-                hits[i][j] = val;
-    }
+    Board<char> *fleet = new Board<char>(10, 10, '-');
+    Board<char> *hits = new Board<char>(10, 10, '-');
 
     void attack(int x, int y)
     {
-        write(out, "TOKEN=" + token, true);
+        write(out, "TOKEN=" + token, true, true);
         write(out, "ATTACK=" + coor_to_string(x, y));
+        write(record, "ATTACK=" + coor_to_string(x, y), false, true);
     }
 
-    void attacked(std::string val, std::string state = "NULL")
+    void attacked(std::string val, std::string state)
     {
         bool hit, destroyed;
-        std::cout << "Attacked: " << val << std::endl;
-        hit = (state != "-FAILED");
-        destroyed = (state == "-DESTROYED");
+        hit = !(state == "FAILED");
+        destroyed = state == "DESTROYED";
         y = val[0] - 'A';
-        if (val.size() == 3 && val[3] == '0')
+        if (val.size() >= 3 && val.substr(1, 3) == "10")
             x = 9;
         else
             x = val[1] - '0' - 1;
-        std::cout << x << ' ' << y << ' ' << hit << std::endl;
+        std::cout << "Attacked: " << val << std::endl;
+        std::cout << "Result: " << state << std::endl;
+        std::cout << "Hit?: " << hit << ' ' << "Destroyed?: " << destroyed << std::endl;
         if (hit)
-        {
-            std::cout << "HIT" << std::endl;
-            fleet[x][y] = 'Y';
-        }
+            fleet->set(x, y, 'Y');
         else
-        {
-            std::cout << "MISS" << std::endl;
-            fleet[x][y] = 'L';
-        }
+            // fleet->set(x, y, 'L');
+            ;
         if (destroyed)
         {
-            int *t = dest_range(x, y);
-            std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
-            __fill(t[0], t[2], t[1], t[3], 'X');
+            int *t = dest_range(x, y, fleet);
+            fleet->fill(t[0], t[2], t[1], t[3], 'X');
         }
-        // print(fleet, "Your Board");
     }
 
     char ship_type(int x_1, int x_2, int y_1, int y_2)
     {
         int x = abs(x_1 - x_2);
         int y = abs(y_1 - y_2);
-        return l[max(x, y)];
+        return l[std::max(x, y)];
     }
 
     std::string coor_to_string(int x, int y)
@@ -206,6 +166,7 @@ private:
             p1 = {char(y + 'A'), char((x + 1 + '0'))};
         return p1;
     }
+
     std::string voh(int x_1, int x_2, int y_1, int y_2)
     {
         int x = abs(x_1 - x_2);
@@ -213,13 +174,13 @@ private:
         return (x > y) ? "V" : "H";
     }
 
-    void fill(int ships = 0)
+    void fill_ships(int ships = 0)
     {
         char add;
         for (int s = 0; s < ships; s++)
         {
             add = ship_type(ranges[s][0][0], ranges[s][1][0], ranges[s][0][1], ranges[s][1][1]);
-            _fill(ranges[s][0][0], ranges[s][1][0], ranges[s][0][1], ranges[s][1][1], add);
+            fleet->fill(ranges[s][0][0], ranges[s][1][0], ranges[s][0][1], ranges[s][1][1], add);
         }
     }
 
@@ -247,6 +208,7 @@ private:
             throw std::invalid_argument("Handshake denied");
         get_info(t_info[1]);
         token = info[1];
+        record = "Moves_Record_" + token;
         std::cout << "Hand Shake Complete" << std::endl;
         // std::cout << token;
     }
@@ -257,31 +219,26 @@ private:
         do
         {
             read(in, true, false);
-            if (t_info.size() != 0 && get_info(t_info.at(1)) && (info[1] == "YOU WIN!" || info[1] == "YOU LOSE"))
-            {
-                std::cout << t_info.at(1) << std::endl;
+            if (t_info.size() != 0 && (t_info.at(1) == win || t_info.at(1) == lose))
                 break;
-            }
             sleep(1);
             read(filename, silent);
         } while (t_info.size() == 0);
+        std::cout << t_info.at(1) << std::endl;
         return;
     }
 
-    int *dest_range(int x, int y)
+    int *dest_range(int x, int y, Board<char> *a)
     {
         static int dest[4];
-        dest[0] = x;
-        dest[1] = y;
-        dest[2] = x;
-        dest[3] = y;
-        while (dest[0] != 0 && hits[dest[0] - 1][y] == 'Y')
+        dest[0] = x, dest[1] = y, dest[2] = x, dest[3] = y;
+        while (dest[0] != 0 && a->at(dest[0] - 1, y) == 'Y')
             dest[0] -= 1;
-        while (dest[2] != 9 && hits[dest[2] + 1][y] == 'Y')
+        while (dest[2] != 9 && a->at(dest[2] + 1, y) == 'Y')
             dest[2] += 1;
-        while (dest[1] != 0 && hits[x][dest[1] - 1] == 'Y')
+        while (dest[1] != 0 && a->at(x, dest[1] - 1) == 'Y')
             dest[1] -= 1;
-        while (dest[3] != 9 && hits[x][dest[3] + 1] == 'Y')
+        while (dest[3] != 9 && a->at(x, dest[3] + 1) == 'Y')
             dest[3] += 1;
         return dest;
     }
@@ -315,33 +272,39 @@ private:
         if (left[0] + left[1] + left[2] == 0)
             prob->only_torpedo();
         int *select = prob->smart_select();
-        std::cout << "A: " << left[0] << " B: " << left[1] << " S: " << left[2] << " T: " << left[3] << std::endl;
+        std::cout << "A: " << left[0] << " B: " << left[1]
+                  << " S: " << left[2] << " T: " << left[3] << std::endl;
         int x = select[0];
         int y = select[1];
         attack(x, y);
         standby(in);
+        write(record, t_info.at(1), false, true);
         get_info(t_info.at(1));
         if (info[1] == "YOU WIN!")
+        {
+            hits->set(x, y, 'Y');
+            _hit++;
             return true;
+        }
         if (info[1] == "FAILED")
         {
-            hits[x][y] = 'L';
+            hits->set(x, y, '.');
             prob->miss(x, y);
             _miss++;
         }
         else if (info[1] == "DAMAGED")
         {
-            hits[x][y] = 'Y';
+            hits->set(x, y, 'Y');
             prob->hit(x, y);
             _hit++;
         }
         else if (info[1] == "DESTROYED")
         {
-            hits[x][y] = 'Y';
-            int *t = dest_range(x, y);
+            hits->set(x, y, 'Y');
+            int *t = dest_range(x, y, hits);
             remove_ship(ship_type(t[0], t[2], t[1], t[3]));
             // std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
-            __fill(t[0], t[2], t[1], t[3], 'X');
+            hits->fill(t[0], t[2], t[1], t[3], 'X');
             prob->destroyed(x, y);
             _hit++;
         }
@@ -363,25 +326,24 @@ private:
             do
             {
                 standby(ex, true);
-                if (get_info(t_info.at(1)) && info[0] == "ATTACK")
+                get_info(t_info.at(1));
+                if (info[0] == "ATTACK")
                     attacked_buffer.push_back(info[1]);
-                if (info[1] == "YOU WIN!" || info[1] == "YOU LOSE")
-                    return counter;
-            } while (!get_info(t_info.at(0)) || info[1] != token || !get_info(t_info.at(1)) || info[1] != "YOUR TURN");
-            std::cout << "Shot  #" << counter << std::endl;
+            } while (info[1] != "YOUR TURN" && info[1] != "YOU LOSE");
+            if (info[1] == "YOU WIN!")
+                return counter;
             for (auto i : attacked_buffer)
             {
                 std::cout << i << std::endl;
-                attacked(i.substr(0, i.find('-')), i.substr(i.find('-')));
+                attacked(i.substr(0, i.find('-')), i.substr(i.find('-') + 1));
             }
+            if (info[1] == "YOU LOSE")
+                return counter;
             attacked_buffer.clear();
-            print(fleet, "Your Board");
-            print(hits, "Enemy Board");
+            std::cout << "Shot  #" << counter << std::endl;
             combat();
-            /*
-            if (combat())
-                counter -= 1;
-            */
+            fleet->print("Your Board");
+            hits->print("Enemy Board");
         }
         return counter;
         // NOTIFICATION=YOU WIN!
@@ -395,12 +357,6 @@ private:
         remove(out.c_str());
         std::cout << "Notfile: " << ex << std::endl;
         remove(ex.c_str());
-        for (int i = 0; i < 10; i++)
-            for (int j = 0; j < 10; j++)
-            {
-                fleet[i][j] = '-';
-                hits[i][j] = '-';
-            }
     }
 
 public:
@@ -410,14 +366,15 @@ public:
     {
         handshake();
         send_coords();
-        fill(10);
-        print(fleet, "Your Board");
+        fill_ships(10);
+        fleet->print("Your Board");
+        hits->print("Enemy Board");
         int turns = run();
         remove(in.c_str());
         remove(out.c_str());
         remove(ex.c_str());
-        print(fleet, "Your Board");
-        print(hits, "Enemy Board");
+        fleet->print("Your Board");
+        hits->print("Enemy Board");
         if (ratio)
             std::cout << "H/M " << _hit << ':' << _miss << " ratio: " << float(_hit) / float(_miss + _hit) << std::endl;
         return turns;
@@ -426,7 +383,11 @@ public:
     ~Deepred_blue()
     {
         delete prob;
+        delete fleet;
+        delete hits;
         prob = nullptr;
+        fleet = nullptr;
+        hits = nullptr;
     }
 };
 #endif
