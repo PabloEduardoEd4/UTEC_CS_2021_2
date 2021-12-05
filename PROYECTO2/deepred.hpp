@@ -3,15 +3,17 @@
 
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <time.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <windows.h>
 #include "prob.hpp"
 #include "board.hpp"
-
 // Hace todo relacionado a los files
 class Deep_red
 {
@@ -49,29 +51,21 @@ protected:
     {
         std::string *line = new std::string();
         t_info.clear();
-        std::ifstream *input = new std::ifstream;
-        input->open(filename);
-        if (input->is_open())
+        std::ifstream *input = new std::ifstream(filename);
+        bool open = input->is_open();
+        if (open)
             while (std::getline(*input, *line))
             {
                 if (!silent)
                     std::cout << *line << std::endl;
                 t_info.push_back(*line);
             }
-        else
-        {
-            input->close();
-            delete input;
-            delete line;
-            return false;
-        }
-
         input->close();
         if (del)
             remove(filename.c_str());
         delete input;
         delete line;
-        return true;
+        return open;
     }
 
     bool get_info(std::string s, std::string div = "=")
@@ -86,6 +80,16 @@ protected:
         std::cout << "Press and key and [ENTER] to continue:";
         std::cin >> *buffer;
         delete buffer;
+    }
+
+    // https://stackoverflow.com/questions/4184468/sleep-for-milliseconds
+    void sleepcp(int milliseconds)
+    {
+        clock_t time_end;
+        time_end = clock() + milliseconds * CLOCKS_PER_SEC / 1000;
+        while (clock() < time_end)
+        {
+        }
     }
 
 public:
@@ -137,12 +141,11 @@ private:
             x = val[1] - '0' - 1;
         std::cout << "Attacked: " << val << std::endl;
         std::cout << "Result: " << state << std::endl;
-        std::cout << "Hit?: " << hit << ' ' << "Destroyed?: " << destroyed << std::endl;
+        std::cout << "Hit?: " << hit << ' ' << ", Destroyed?: " << destroyed << std::endl;
         if (hit)
             fleet->set(x, y, 'Y');
         else
-            // fleet->set(x, y, 'L');
-            ;
+            fleet->set(x, y, '.');
         if (destroyed)
         {
             int *t = dest_range(x, y, fleet);
@@ -206,7 +209,7 @@ private:
         get_info(t_info.at(0));
         if (info[1] != "ACCEPTED")
             throw std::invalid_argument("Handshake denied");
-        get_info(t_info[1]);
+        get_info(t_info.at(1));
         token = info[1];
         record = "Moves_Record_" + token;
         std::cout << "Hand Shake Complete" << std::endl;
@@ -221,10 +224,10 @@ private:
             read(in, true, false);
             if (t_info.size() != 0 && (t_info.at(1) == win || t_info.at(1) == lose))
                 break;
-            sleep(1);
+            // Sleep(100);
+            Sleep(900);
             read(filename, silent);
         } while (t_info.size() == 0);
-        std::cout << t_info.at(1) << std::endl;
         return;
     }
 
@@ -303,12 +306,12 @@ private:
             hits->set(x, y, 'Y');
             int *t = dest_range(x, y, hits);
             remove_ship(ship_type(t[0], t[2], t[1], t[3]));
-            // std::cout << t[0] << t[1] << t[2] << t[3] << std::endl;
             hits->fill(t[0], t[2], t[1], t[3], 'X');
             prob->destroyed(x, y);
             _hit++;
         }
         // print(hits, "Enemies Board");
+        sleep(1);
         return (info[1] == "DESTROYED" || info[1] == "DAMAGED");
     }
 
@@ -326,18 +329,16 @@ private:
             do
             {
                 standby(ex, true);
-                get_info(t_info.at(1));
-                if (info[0] == "ATTACK")
-                    attacked_buffer.push_back(info[1]);
-            } while (info[1] != "YOUR TURN" && info[1] != "YOU LOSE");
-            if (info[1] == "YOU WIN!")
-                return counter;
+                if (t_info.at(1).find("ATTACK") != std::string::npos)
+                    attacked_buffer.push_back(t_info.at(1));
+            } while (t_info.at(1) != "NOTIFICATION=YOUR TURN" && t_info.at(1) != "NOTIFICATION=YOU LOSE");
             for (auto i : attacked_buffer)
             {
-                std::cout << i << std::endl;
-                attacked(i.substr(0, i.find('-')), i.substr(i.find('-') + 1));
+                int s = i.find('=') + 1, e = i.find('-');
+                attacked(i.substr(i.find('=') + 1, e - s), i.substr(i.find('-') + 1));
             }
-            if (info[1] == "YOU LOSE")
+            get_info(t_info.at(1));
+            if (info[0] == "YOU WIN!" || info[1] == "YOU LOSE")
                 return counter;
             attacked_buffer.clear();
             std::cout << "Shot  #" << counter << std::endl;

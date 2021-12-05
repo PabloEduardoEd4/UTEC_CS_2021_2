@@ -16,10 +16,10 @@ int main(int argc, char *argv[])
 	n = nullptr;
 	//.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship\\
 	//G:\\.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship
-	//G:\\.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship
-	//Player *n = new Player();
-	//n->print_fleet();
-	//n->print_hits();
-	//VARTYPE for hits?
-	//delete n;
+	// G:\\.shortcut-targets-by-id\\1_oUqTASj6Sw51J-MC2LGF-6mnozCbc2W\\Battleship
+	// Player *n = new Player();
+	// n->print_fleet();
+	// n->print_hits();
+	// VARTYPE for hits?
+	// delete n;
 }
