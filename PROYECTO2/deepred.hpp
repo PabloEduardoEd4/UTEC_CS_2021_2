@@ -145,7 +145,8 @@ private:
         if (hit)
             fleet->set(x, y, 'Y');
         else
-            fleet->set(x, y, '.');
+            ;
+        // fleet->set(x, y, '.');
         if (destroyed)
         {
             int *t = dest_range(x, y, fleet);
@@ -202,6 +203,23 @@ private:
         }
     }
 
+    void standby(std::string filename, bool silent = false)
+    {
+        bool temp;
+        std::ifstream infile(filename);
+        do
+        {
+            infile.close();
+            if (read(in, true, false) && t_info.size() != 0 && (t_info.at(1) == win || t_info.at(1) == lose))
+                return;
+            Sleep(900);
+            std::ifstream infile(filename);
+            temp = infile.good();
+        } while (!temp);
+        read(filename, silent);
+        return;
+    }
+
     void handshake()
     {
         write(out, "HANDSHAKE=" + name);
@@ -214,21 +232,6 @@ private:
         record = "Moves_Record_" + token;
         std::cout << "Hand Shake Complete" << std::endl;
         // std::cout << token;
-    }
-
-    void standby(std::string filename, bool silent = false)
-    {
-
-        do
-        {
-            read(in, true, false);
-            if (t_info.size() != 0 && (t_info.at(1) == win || t_info.at(1) == lose))
-                break;
-            // Sleep(100);
-            Sleep(900);
-            read(filename, silent);
-        } while (t_info.size() == 0);
-        return;
     }
 
     int *dest_range(int x, int y, Board<char> *a)
@@ -279,13 +282,15 @@ private:
                   << " S: " << left[2] << " T: " << left[3] << std::endl;
         int x = select[0];
         int y = select[1];
+        // std::cout << x << ' ' << y << std::endl;
         attack(x, y);
         standby(in);
         write(record, t_info.at(1), false, true);
         get_info(t_info.at(1));
+        std::cout << "Test: " << info[1] << std::endl;
         if (info[1] == "YOU WIN!")
         {
-            hits->set(x, y, 'Y');
+            hits->set(x, y, 'X');
             _hit++;
             return true;
         }
@@ -311,7 +316,6 @@ private:
             _hit++;
         }
         // print(hits, "Enemies Board");
-        sleep(1);
         return (info[1] == "DESTROYED" || info[1] == "DAMAGED");
     }
 
@@ -343,6 +347,9 @@ private:
             attacked_buffer.clear();
             std::cout << "Shot  #" << counter << std::endl;
             combat();
+            get_info(t_info.at(1));
+            if (info[0] == "YOU WIN!" || info[1] == "YOU LOSE")
+                return counter;
             fleet->print("Your Board");
             hits->print("Enemy Board");
         }
@@ -374,10 +381,10 @@ public:
         remove(in.c_str());
         remove(out.c_str());
         remove(ex.c_str());
-        fleet->print("Your Board");
-        hits->print("Enemy Board");
         if (ratio)
-            std::cout << "H/M " << _hit << ':' << _miss << " ratio: " << float(_hit) / float(_miss + _hit) << std::endl;
+            std::cout << "H/M " << _hit << ':' << _miss
+                      << " ratio: " << float(_hit) / float(_miss + _hit)
+                      << std::endl;
         return turns;
     }
 
