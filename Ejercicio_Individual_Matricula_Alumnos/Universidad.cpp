@@ -48,6 +48,14 @@ void Universidad::emitirListadoAlumnosMatriculados()
         alumno->mostrar();
 }
 
+bool Universidad::codigoValido(std::string codigo)
+{
+    for (const auto alumno : *alumnos)
+        if (alumno->getCodigo() == codigo)
+            return false;
+    return true;
+}
+
 Universidad::~Universidad()
 {
     // Liberar a los objetos alumnos

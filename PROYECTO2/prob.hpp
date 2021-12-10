@@ -13,6 +13,7 @@
 // puede calcular la mejor posicion, actualizando y recalculando con cada input.
 // Hay partes deo
 
+// Calcula la mejor movida possible
 class ProbGrid
 {
 private:

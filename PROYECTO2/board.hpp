@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <unistd.h>
 
+// Contiene los boards
 template <typename T>
 class Board
 {
@@ -48,7 +49,7 @@ public:
     }
     ~Board()
     {
-        delete array;
+        delete[] array;
         array = nullptr;
     }
     /*

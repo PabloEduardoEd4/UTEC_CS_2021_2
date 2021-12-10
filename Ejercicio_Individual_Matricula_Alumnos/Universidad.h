@@ -6,9 +6,11 @@
 #define LAB035_UNIVERSIDAD_H
 #include "Alumno.h"
 #include <vector>
-class Universidad {
+class Universidad
+{
 private:
-    vector<Alumno*>* alumnos;
+    vector<Alumno *> *alumnos;
+
 public:
     // constructor
     Universidad();
@@ -20,11 +22,10 @@ public:
                                   const string &apellidoMaterno, const string &apoderado);
     void matricularAlumnoPostGrado(const string &codigo, const string &nombre, const string &apellidoPaterno,
                                    const string &apellidoMaterno, const string &empresaTrabajo);
+    bool codigoValido(std::string codigo);
     void emitirListadoAlumnosMatriculados();
     // destructor
     virtual ~Universidad();
-
 };
 
-
-#endif //LAB035_UNIVERSIDAD_H
+#endif // LAB035_UNIVERSIDAD_H

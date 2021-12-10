@@ -9,6 +9,7 @@ public:
     Esfera(int x, int y, float radio);
     float calcularArea() override;
     float calcularVolumen();
+    ~Esfera();
 };
 
 #endif

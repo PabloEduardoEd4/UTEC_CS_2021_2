@@ -77,8 +77,11 @@ void Sistema::matricularAlumnoPreGrado()
     string codigo, nombre, apellidoPaterno, apellidoMaterno, apoderado;
     cout << "Matricula de Alumno Pre-Grado\n"
          << endl;
-    cout << "Codigo: ";
-    getline(cin, codigo);
+    do
+    {
+        cout << "Codigo: ";
+        getline(cin, codigo);
+    } while (!(universidad->codigoValido(codigo)));
     cout << "Nombre: ";
     getline(cin, nombre);
     cout << "Apellido Paterno: ";
@@ -98,9 +101,14 @@ void Sistema::matricularAlumnoPostGrado()
     string codigo, nombre, apellidoPaterno, apellidoMaterno, empresa;
     cout << "Matricula de Alumno Pre-Grado\n"
          << endl;
-    cout << "Codigo: ";
-    getline(cin, codigo);
-    cout << "Nombre: ";
+
+    do
+    {
+        cout << "Codigo: ";
+        getline(cin, codigo);
+    } while (!(universidad->codigoValido(codigo)));
+    cout
+        << "Nombre: ";
     getline(cin, nombre);
     cout << "Apellido Paterno: ";
     getline(cin, apellidoPaterno);
