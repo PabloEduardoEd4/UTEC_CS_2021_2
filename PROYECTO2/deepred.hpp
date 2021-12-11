@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <time.h>
 #include <stdexcept>
-#include <unistd.h>
+// #include <unistd.h> INCOMPATIBLE WITH WINDOWS
 #include <windows.h>
 #include "prob.hpp"
 #include "board.hpp"
@@ -28,6 +28,16 @@ protected:
     const std::string name;
     std::vector<std::string> t_info;
     std::string info[2];
+
+    int max_p(int a, int b)
+    {
+        return (a < b) ? b : a;
+    }
+
+    int min_p(int a, int b)
+    {
+        return (a < b) ? a : b;
+    }
 
     bool write(std::string filename, std::string _s, bool overwrite = false, bool silent = false)
     {
@@ -199,7 +209,7 @@ private:
 
     char ship_type(int x_1, int x_2, int y_1, int y_2)
     {
-        return l[std::max(abs(x_1 - x_2), abs(y_1 - y_2))];
+        return l[max_p(abs(x_1 - x_2), abs(y_1 - y_2))];
     }
 
     std::string coor_to_string(int x, int y)
@@ -330,7 +340,7 @@ private:
         int counter;
         int s, e;
         std::string a;
-        for (counter = 0; counter < 100; counter++)
+        for (counter = 0; counter < 101; counter++)
         {
             read(in, true, false);
             if (t_info.size() != 0 && get_info(t_info.at(1)) && (info[1] == "YOU WIN!" || info[1] == "YOU LOSE"))
