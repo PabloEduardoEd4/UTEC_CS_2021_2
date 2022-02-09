@@ -23,7 +23,7 @@ private:
 public:
     Board(int size_x, int size_y, T empty) : size_x(size_x), size_y(size_y), array(new T[size_x * size_y]) { initialize(empty); }
     char at(int x, int y) { return array[x * size_y + y]; }
-    void set(int x, int y, char val) { array[x * size_y + y] = val; }
+    void set(int x, int y, T val) { array[x * size_y + y] = val; }
     void fill(int x_1, int x_2, int y_1, int y_2, T val)
     {
         for (int i = x_1; i <= x_2; i++)
